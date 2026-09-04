@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Assetra{% endblock %}
+{% block content %}
+{% from "_icons.html" import icon %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Overview</div>
+    <h1>Asset registry</h1>
+  </div>
+  <a href="{{ url_for('asset_new') }}" class="btn btn-accent">{{ icon('plus-circle', 16) }}Register asset</a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="num">{{ total }}</div>
+    <div class="label">Total assets</div>
+  </div>
+  {% for s in statuses %}
+  <div class="stat">
+    <div class="num">{{ status_map.get(s, 0) }}</div>
+    <div class="label">{{ s }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="detail-grid">
+  <div>
+    <div class="section-title">Needs attention</div>
+    {% if needs_attention %}
+    <div class="card table-wrap" style="padding:0;">
+      <table>
+        <thead><tr><th>Tag</th><th>Asset</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for a in needs_attention %}
+          <tr onclick="location.href='{{ url_for('asset_detail', asset_id=a.id) }}'" style="cursor:pointer;">
+            <td class="mono">{{ a.asset_tag }}</td>
+            <td>{{ a.name }}</td>
+            <td><span class="badge badge-{{ a.status|lower|replace(' ','-') }}">{{ a.status }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card empty-state">{{ icon('check-circle', 30) }}<p style="margin:0;">Nothing needs attention right now.</p></div>
+    {% endif %}
+
+    <div class="section-title">By category</div>
+    <div class="card">
+      {% if by_category %}
+        {% set max_c = by_category[0].c %}
+        {% for c in by_category %}
+        <div style="display:flex; align-items:center; gap:12px; padding:7px 0;">
+          <span style="width:100px; flex-shrink:0; font-size:13.5px;">{{ c.category }}</span>
+          <div style="flex:1; background:var(--paper); border-radius:3px; overflow:hidden; height:10px;">
+            <div style="width:{{ (c.c / max_c * 100)|round(0, 'floor') }}%; background:var(--amber); height:100%;"></div>
+          </div>
+          <span class="mono" style="width:24px; text-align:right; font-size:13px; color:var(--steel);">{{ c.c }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:var(--steel);">No assets registered yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div>
+    <div class="section-title">Recent activity</div>
+    <div class="card">
+      <ul class="timeline">
+        {% for h in recent_activity %}
+        <li>
+          <a href="{{ url_for('asset_detail', asset_id=h.asset_id) }}">
+            <span class="t-action">{{ h.action }}</span>{{ h.asset_name }} <span class="mono" style="color:var(--steel);">({{ h.asset_tag }})</span>
+            <span class="t-time">{{ h.timestamp }}</span>
+          </a>
+        </li>
+        {% else %}
+        <li style="color:var(--steel); border:none;">No activity yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

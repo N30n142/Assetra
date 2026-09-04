@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Locations · Assetra{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Setup</div>
+    <h1>Locations</h1>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div>
+    <div class="section-title">All locations</div>
+    <div class="card">
+      {% for l in locations %}
+        <div style="padding:8px 0; border-bottom:1px solid var(--hairline);">{{ l.name }}</div>
+      {% else %}
+        <p style="color:var(--steel);">No locations yet.</p>
+      {% endfor %}
+      <form method="post" style="margin-top:14px; display:flex; gap:8px;">
+        <input type="text" name="name" placeholder="New location name" required style="flex:1;">
+        <button type="submit" class="btn btn-ghost btn-sm">Add</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

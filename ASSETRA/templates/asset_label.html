@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Print label · {{ asset.asset_tag }}{% endblock %}
+{% block content %}
+{% from "_icons.html" import icon %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Printable label</div>
+    <h1>{{ asset.asset_tag }}</h1>
+  </div>
+  <a href="{{ url_for('asset_detail', asset_id=asset.id) }}" class="btn btn-ghost">Back to asset</a>
+</div>
+
+<div class="label-sheet">
+  <div class="label-card label-card-tape">
+    <div class="lc-qr" id="qrbox"></div>
+    <div class="lc-tag lc-tag-big">{{ asset.asset_tag }}</div>
+  </div>
+
+  <div class="label-actions">
+    <button class="btn btn-accent" onclick="window.print()">{{ icon('printer', 16) }}Print</button>
+    <button class="btn btn-ghost" onclick="downloadQR('{{ asset.asset_tag }}-qr.png')">{{ icon('download', 16) }}Download QR</button>
+  </div>
+  <p style="text-align:center; color:var(--steel); font-size:12.5px; margin-top:10px;">
+    Tip: in the print dialog, set paper size to match your label tape and margins to "None" for the best fit.
+  </p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  new QRCode(document.getElementById("qrbox"), {
+    text: "{{ scan_url }}",
+    width: 200,
+    height: 200,
+    colorDark: "#1c2230",
+    colorLight: "#ffffff",
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Employees · Assetra{% endblock %}
+{% block content %}
+{% from "_icons.html" import icon %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow">{{ employees|length }} employee{{ 's' if employees|length != 1 }}</div>
+    <h1>Employees</h1>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div>
+    {% if employees %}
+    <div class="card table-wrap" style="padding:0;">
+      <table data-sortable>
+        <thead><tr><th data-key="name">Name</th><th data-key="email">Email</th><th data-key="loc">Location</th><th data-key="count">Assets held</th></tr></thead>
+        <tbody>
+        {% for e in employees %}
+          <tr>
+            <td><strong>{{ e.full_name }}</strong></td>
+            <td>{{ e.email or '—' }}</td>
+            <td>{{ e.location_name or '—' }}</td>
+            <td class="mono">{{ e.asset_count }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card empty-state">{{ icon('users', 32) }}<h3>No employees yet</h3><p>Add your first employee to start assigning assets.</p></div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="section-title">Add employee</div>
+    <div class="card">
+      <form method="post">
+        <div class="field">
+          <label for="full_name">Full name</label>
+          <input id="full_name" name="full_name" type="text" required>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email">
+        </div>
+        <div class="field">
+          <label for="location_id">Location</label>
+          <select id="location_id" name="location_id">
+            <option value="">— Unassigned —</option>
+            {% for l in locations %}
+            <option value="{{ l.id }}">{{ l.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-accent btn-sm">{{ icon('plus-circle', 15) }}Add employee</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
