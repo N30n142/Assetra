@@ -1,0 +1,118 @@
+{% extends "base.html" %} {% block title %}Print labels · Assetra{% endblock %} {% block content %} {% from "_icons.html" import icon %}
+<div class="page-head">
+    <div>
+        <div class="eyebrow">{{ labels|length }} label{{ 's' if labels|length != 1 }}</div>
+        <h1>Print asset labels</h1>
+    </div>
+    <a href="{{ url_for('asset_list') }}" class="btn btn-ghost">Back to assets</a>
+</div>
+
+<div class="label-actions" style="margin-bottom:18px; display: flex; gap: 10px;">
+    <button class="btn btn-accent" onclick="window.print()">{{ icon('printer', 16) }}Print all</button>
+    <button class="btn btn-ghost" id="tspl-batch-btn" onclick="printAllLabels()">
+        {{ icon('printer', 16) }}<span id="tspl-batch-text">Print QR to USB</span>
+    </button>
+</div>
+
+<div class="label-grid">
+    {% for a in labels %}
+    <div class="label-card label-card-tape">
+        <div class="lc-qr" id="qrbox-{{ a.id }}"></div>
+        <div class="lc-tag lc-tag-big">{{ a.asset_tag }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    // Dynamic Print Helper Host Resolution
+    const isRemoteHost = !['localhost', '127.0.0.1'].includes(window.location.hostname) && !window.location.hostname.startsWith('192.168.');
+    const PRINT_HELPER_HOST = isRemoteHost ? 'localhost' : window.location.hostname;
+    const PRINT_HELPER_URL = `https://${PRINT_HELPER_HOST}:5050`;
+
+    // Fixed single-line Jinja array evaluation
+    const labelsData = {
+        {
+            labels | tojson | safe
+        }
+    };
+
+    if (Array.isArray(labelsData)) {
+        labelsData.forEach(function(a) {
+            const el = document.getElementById("qrbox-" + a.id);
+            if (el) {
+                new QRCode(el, {
+                    text: a.scan_url || a.asset_tag,
+                    width: 140,
+                    height: 140,
+                    colorDark: "#1c2230",
+                    colorLight: "#ffffff",
+                });
+            }
+        });
+    }
+
+    async function printAllLabels() {
+        const btn = document.getElementById('tspl-batch-btn');
+        const label = document.getElementById('tspl-batch-text');
+        const originalText = label.textContent;
+
+        btn.disabled = true;
+
+        if (!labelsData || labelsData.length === 0) {
+            alert("No labels available to print.");
+            btn.disabled = false;
+            return;
+        }
+
+        let successCount = 0;
+        let errors = [];
+
+        for (let i = 0; i < labelsData.length; i++) {
+            const item = labelsData[i];
+            label.textContent = `Printing ${i + 1}/${labelsData.length}…`;
+
+            try {
+                const res = await fetch(PRINT_HELPER_URL + "/print", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        label_text: item.asset_tag,
+                        qr_data: item.scan_url || item.asset_tag,
+                    }),
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || "Print failed");
+                }
+                successCount++;
+            } catch (err) {
+                console.error(err);
+                errors.push(`${item.asset_tag}: ${err.message}`);
+            }
+
+            await new Promise(r => setTimeout(r, 200));
+        }
+
+        if (errors.length > 0) {
+            label.textContent = "Completed with errors";
+            alert(
+                `Printed ${successCount}/${labelsData.length} labels.\n\nErrors:\n` + errors.join('\n') +
+                "\n\nMake sure print_helper.py is running, you're on the office " +
+                "Wi-Fi, and you've visited " + PRINT_HELPER_URL + "/health once " +
+                "to accept the certificate."
+            );
+        } else {
+            label.textContent = "All Printed!";
+        }
+
+        setTimeout(() => {
+            label.textContent = originalText;
+            btn.disabled = false;
+        }, 2000);
+    }
+</script>
+{% endblock %}

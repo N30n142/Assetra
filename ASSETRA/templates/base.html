@@ -1,97 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}Assetra{% endblock %}</title>
-<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Assetra{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
 
-<!-- PWA: installable on phones and laptops -->
-<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-<meta name="theme-color" content="#16233e">
-<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Assetra">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- PWA: installable on phones and laptops -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#16233e">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Assetra">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
-<div id="splash" class="splash">
-  <img src="{{ url_for('static', filename='img/favicon.svg') }}" alt="" width="46" height="46">
-  <div class="splash-name">Assetra</div>
-  <div class="loading-line"><div class="loading-line-inner"></div></div>
-</div>
-{% from "_icons.html" import icon %}
-<div class="shell">
-  <nav class="sidebar">
-    <a class="brand" href="{{ url_for('dashboard') }}">
-      <img src="{{ url_for('static', filename='img/favicon.svg') }}" alt="" width="26" height="26">
-      <div>
-        <span class="brand-name">Assetra</span>
-        <span class="brand-tag">Asset Registry</span>
-      </div>
-    </a>
-
-    <div class="quick-search">
-      {{ icon('search', 15) }}
-      <input id="quick-search" type="text" placeholder="Search assets…" autocomplete="off">
-      <kbd>⌘K</kbd>
-      <div id="quick-search-results" class="qs-panel"></div>
+    <div id="splash" class="splash">
+        <img src="{{ url_for('static', filename='favicon.svg') }}" alt="" width="46" height="46">
+        <div class="splash-name">Assetra</div>
+        <div class="loading-line">
+            <div class="loading-line-inner"></div>
+        </div>
     </div>
+    {% from "_icons.html" import icon %}
+    <div class="shell">
+        <nav class="sidebar">
+            <a class="brand" href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='favicon.svg') }}" alt="" width="26" height="26">
+                <div>
+                    <span class="brand-name">Assetra</span>
+                    <span class="brand-tag">Asset Registry</span>
+                </div>
+            </a>
 
-    <div class="nav-section">
-      <div class="nav-label">Overview</div>
-      <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">{{ icon('grid') }}<span>Dashboard</span></a>
+            <div class="quick-search">
+                {{ icon('search', 15) }}
+                <input id="quick-search" type="text" placeholder="Search assets…" autocomplete="off">
+                <kbd>⌘K</kbd>
+                <div id="quick-search-results" class="qs-panel"></div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Overview</div>
+                <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">{{ icon('grid') }}<span>Dashboard</span></a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Assets</div>
+                <a class="nav-link {{ 'active' if request.endpoint == 'asset_list' }}" href="{{ url_for('asset_list') }}">{{ icon('box') }}<span>All assets</span></a>
+                <a class="nav-link {{ 'active' if request.endpoint == 'asset_new' }}" href="{{ url_for('asset_new') }}">{{ icon('plus-circle') }}<span>Register asset</span></a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">People</div>
+                <a class="nav-link {{ 'active' if request.endpoint == 'employees' }}" href="{{ url_for('employees') }}">{{ icon('users') }}<span>Employees</span></a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Setup</div>
+                <a class="nav-link {{ 'active' if request.endpoint == 'settings' }}" href="{{ url_for('settings') }}">{{ icon('sliders') }}<span>Locations</span></a>
+            </div>
+        </nav>
+
+        <main class="main">
+            <div class="toast-stack">
+                {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+                <div class="flash">{{ icon('check-circle', 16) }}<span>{{ message }}</span>{{ icon('x', 14) }}</div>
+                {% endfor %} {% endif %} {% endwith %}
+            </div>
+            {% block content %}{% endblock %}
+        </main>
     </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var s = document.getElementById('splash');
+                if (!s) return;
+                s.classList.add('hide');
+                setTimeout(function() {
+                    s.remove();
+                }, 400);
+            }, 450);
+        });
 
-    <div class="nav-section">
-      <div class="nav-label">Assets</div>
-      <a class="nav-link {{ 'active' if request.endpoint == 'asset_list' }}" href="{{ url_for('asset_list') }}">{{ icon('box') }}<span>All assets</span></a>
-      <a class="nav-link {{ 'active' if request.endpoint == 'asset_new' }}" href="{{ url_for('asset_new') }}">{{ icon('plus-circle') }}<span>Register asset</span></a>
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-label">People</div>
-      <a class="nav-link {{ 'active' if request.endpoint == 'employees' }}" href="{{ url_for('employees') }}">{{ icon('users') }}<span>Employees</span></a>
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-label">Setup</div>
-      <a class="nav-link {{ 'active' if request.endpoint == 'settings' }}" href="{{ url_for('settings') }}">{{ icon('sliders') }}<span>Locations</span></a>
-    </div>
-  </nav>
-
-  <main class="main">
-    <div class="toast-stack">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="flash">{{ icon('check-circle', 16) }}<span>{{ message }}</span>{{ icon('x', 14) }}</div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-    </div>
-    {% block content %}{% endblock %}
-  </main>
-</div>
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
-<script>
-  window.addEventListener('load', function () {
-    setTimeout(function () {
-      var s = document.getElementById('splash');
-      if (!s) return;
-      s.classList.add('hide');
-      setTimeout(function () { s.remove(); }, 400);
-    }, 450);
-  });
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}");
-    });
-  }
-</script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register("{{ url_for('static', filename='service_worker.js') }}");
+            });
+        }
+    </script>
 </body>
+
 </html>
