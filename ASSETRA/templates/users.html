@@ -1,0 +1,73 @@
+{% extends "base.html" %} {% block title %}Users · Assetra{% endblock %} {% block content %} {% from "_icons.html" import icon %} {% if new_creds %}
+<div class="creds" style="margin-bottom: 20px; padding: 16px 20px; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.25); border-radius: 8px;">
+    <strong style="color: var(--text, #0f172a);">Copy these credentials now — the password won't be shown again!</strong><br>
+    <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
+        <span>Username: <code>{{ new_creds.username }}</code></span>
+        <span>Password: <code>{{ new_creds.password }}</code></span>
+        <span>Role: <strong>{{ new_creds.role | upper }}</strong></span>
+    </div>
+</div>
+{% endif %} {% if me.role == 'superadmin' %}
+<div class="card" style="margin-bottom: 24px;">
+    <h2>Create account</h2>
+    <form method="post" class="row" style="display: flex; gap: 12px; align-items: center; margin-top: 12px;">
+        <input name="username" placeholder="Username" required style="flex: 1; padding: 10px 14px; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; font-size: 14px; background: var(--surface, #ffffff);">
+
+        <select name="role" style="flex: 1; padding: 10px 14px; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; font-size: 14px; background: var(--surface, #ffffff); color: var(--text, #0f172a); cursor: pointer;">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+
+        <button type="submit" class="btn btn-accent" style="padding: 10px 18px; font-weight: 500;">Create</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Accounts</h2>
+    <p style="font-size: 13px; color: var(--steel, #64748b); margin-top: 4px; margin-bottom: 12px;">Passwords are securely hashed and cannot be viewed in plain text. Use <strong>Reset pw</strong> to generate new credentials.</p>
+
+    <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 1px solid var(--border);">
+                <th style="padding: 10px; font-size: 12px; color: var(--steel, #64748b);">USERNAME</th>
+                <th style="padding: 10px; font-size: 12px; color: var(--steel, #64748b);">PASSWORD</th>
+                <th style="padding: 10px; font-size: 12px; color: var(--steel, #64748b);">ROLE</th>
+                <th style="padding: 10px; font-size: 12px; color: var(--steel, #64748b);">STATUS</th>
+                <th style="padding: 10px; text-align: right; font-size: 12px; color: var(--steel, #64748b);"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in accounts %}
+            <tr style="border-bottom: 1px solid var(--border, #e2e8f0);">
+                <td style="padding: 14px 10px; font-weight: 500;">{{ a.username }}</td>
+                <td style="padding: 14px 10px;">
+                    <code style="font-family: monospace; color: var(--steel);">••••••••</code>
+                </td>
+                <td style="padding: 14px 10px;"><span class="badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,0.06); font-weight: 600;">{{ a.role | upper }}</span></td>
+                <td style="padding: 14px 10px;">
+                    <span style="color: {{ 'var(--success, #16a34a)' if a.is_active else 'var(--danger, #dc2626)' }}; font-weight: 500;">
+            {{ 'Active' if a.is_active else 'Disabled' }}
+          </span>
+                </td>
+                <td style="padding: 14px 10px; text-align: right;">
+                    {% if a.role != 'superadmin' and a.id != me.id and (me.role == 'superadmin' or a.role == 'user') %}
+                    <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                        <form class="inline" method="post" action="{{ url_for('reset_password', uid=a.id) }}">
+                            <button class="btn btn-ghost btn-sm">Reset pw</button>
+                        </form>
+                        <form class="inline" method="post" action="{{ url_for('toggle_account', uid=a.id) }}">
+                            <button class="btn btn-ghost btn-sm">{{ 'Disable' if a.is_active else 'Enable' }}</button>
+                        </form>
+                        <form class="inline" method="post" action="{{ url_for('delete_account', uid=a.id) }}" onsubmit="return confirm('Delete {{ a.username }}?')">
+                            <button class="btn btn-danger btn-sm" style="color: #dc2626; border-color: rgba(220, 38, 38, 0.3);">Delete</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

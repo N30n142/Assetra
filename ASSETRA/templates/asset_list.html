@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Assets · Assetra{% endblock %}
+{% block content %}
+{% from "_icons.html" import icon %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow">{{ assets|length }} result{{ 's' if assets|length != 1 }}</div>
+    <h1>All assets</h1>
+  </div>
+  <a href="{{ url_for('asset_new') }}" class="btn btn-accent">{{ icon('plus-circle', 16) }}Register asset</a>
+</div>
+
+<form class="search-bar" method="get">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search by name, ID, serial, or assignee…">
+  <select name="status">
+    <option value="">All statuses</option>
+    {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}
+  </select>
+  <select name="category">
+    <option value="">All categories</option>
+    {% for c in categories %}<option value="{{ c }}" {{ 'selected' if c == category }}>{{ c }}</option>{% endfor %}
+  </select>
+  <select name="location_id">
+    <option value="">All locations</option>
+    {% for l in locations %}<option value="{{ l.id }}" {{ 'selected' if l.id|string == location_id }}>{{ l.name }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-ghost" type="submit">{{ icon('search', 15) }}Filter</button>
+</form>
+
+{% if assets %}
+<form id="batch-form" method="get" action="{{ url_for('asset_labels_batch') }}">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+    <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--steel);">
+      <input type="checkbox" id="select-all"> Select all
+    </label>
+    <button type="submit" class="btn btn-ghost btn-sm" id="print-selected" disabled>{{ icon('printer', 15) }}Print selected labels</button>
+  </div>
+
+  <div class="card table-wrap" style="padding:0;">
+    <table data-sortable>
+      <thead>
+        <tr>
+          <th style="width:34px;"></th>
+          <th data-key="tag">Asset ID</th><th data-key="name">Asset</th><th data-key="category">Category</th><th data-key="status">Status</th>
+          <th data-key="assignee">Assigned to</th><th data-key="location">Location</th><th data-key="condition">Condition</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in assets %}
+        <tr>
+          <td onclick="event.stopPropagation();"><input type="checkbox" class="row-check" name="ids" value="{{ a.id }}"></td>
+          <td class="mono" onclick="location.href='{{ url_for('asset_detail', asset_id=a.id) }}'" style="cursor:pointer;">{{ a.asset_tag }}</td>
+          <td onclick="location.href='{{ url_for('asset_detail', asset_id=a.id) }}'" style="cursor:pointer;"><strong>{{ a.name }}</strong></td>
+          <td onclick="location.href='{{ url_for('asset_detail', asset_id=a.id) }}'" style="cursor:pointer;">{{ a.category }}</td>
+          <td onclick="location.href='{{ url_for('asset_detail', asset_id=a.id) }}'" style="cursor:pointer;"><span class="badge badge-{{ a.status|lower|replace(' ','-') }}">{{ a.status }}</span></td>
+          <td onclick="location.href='{{ url_for('asset_detail', asset_id=a.id) }}'" style="cursor:pointer;">{{ a.employee_name or '—' }}</td>
+          <td onclick="location.href='{{ url_for('asset_detail', asset_id=a.id) }}'" style="cursor:pointer;">{{ a.location_name or '—' }}</td>
+          <td onclick="location.href='{{ url_for('asset_detail', asset_id=a.id) }}'" style="cursor:pointer;">{{ a.condition }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
+{% else %}
+<div class="card empty-state">
+  {{ icon('inbox', 34) }}
+  <h3>No assets match this search</h3>
+  <p>Try clearing filters, or register a new asset to get started.</p>
+</div>
+{% endif %}
+
+<script>
+(function () {
+  const selectAll = document.getElementById('select-all');
+  const printBtn = document.getElementById('print-selected');
+  const checks = () => Array.from(document.querySelectorAll('.row-check'));
+
+  function refreshButton() {
+    printBtn.disabled = checks().filter(c => c.checked).length === 0;
+  }
+  if (selectAll) {
+    selectAll.addEventListener('change', () => {
+      checks().forEach(c => { c.checked = selectAll.checked; });
+      refreshButton();
+    });
+  }
+  checks().forEach(c => c.addEventListener('change', refreshButton));
+  refreshButton();
+})();
+</script>
+{% endblock %}

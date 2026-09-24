@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if asset else 'Register' }} asset · Assetra{% endblock %}
+{% block content %}
+{% from "_icons.html" import icon %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow">{{ 'Editing ' + asset.asset_tag if asset else 'New asset' }}</div>
+    <h1>{{ 'Edit asset' if asset else 'Register a new asset' }}</h1>
+  </div>
+</div>
+
+<form method="post" class="card">
+  <div class="form-grid">
+    <div class="field full">
+      <label for="name">Asset name *</label>
+      <input id="name" name="name" type="text" required
+             value="{{ form.name if form else (asset.name if asset else '') }}"
+             placeholder="e.g. Dell Latitude 5440">
+    </div>
+
+    <div class="field">
+      <label for="asset_tag">Asset ID *</label>
+      <input id="asset_tag" name="asset_tag" type="text" required
+             value="{{ form.asset_tag if form else (asset.asset_tag if asset else '') }}"
+             placeholder="e.g. LAPTOP-001">
+    </div>
+
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category" name="category">
+        <option value="">— Not set —</option>
+        {% for c in categories %}
+        <option value="{{ c }}" {{ 'selected' if asset and asset.category == c }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="serial_number">Serial number</label>
+      <input id="serial_number" name="serial_number" type="text"
+             value="{{ form.serial_number if form else (asset.serial_number if asset else '') }}"
+             placeholder="e.g. SN-8823X (optional)">
+    </div>
+
+    <div class="field">
+      <label for="location_id">Location</label>
+      <select id="location_id" name="location_id">
+        <option value="">— Unassigned —</option>
+        {% for l in locations %}
+        <option value="{{ l.id }}" {{ 'selected' if asset and asset.location_id == l.id }}>{{ l.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {% if not asset %}
+    <div class="field">
+      <label for="assigned_employee_id">Assign to employee (optional)</label>
+      <select id="assigned_employee_id" name="assigned_employee_id">
+        <option value="">— Leave unassigned —</option>
+        {% for e in employees %}
+        <option value="{{ e.id }}">{{ e.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="field">
+      <label for="condition">Condition</label>
+      <select id="condition" name="condition">
+        {% for c in conditions %}
+        <option value="{{ c }}" {{ 'selected' if (asset and asset.condition == c) or (not asset and c == 'Good') }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="purchase_date">Purchase date</label>
+      <input id="purchase_date" name="purchase_date" type="date" value="{{ asset.purchase_date if asset else '' }}">
+    </div>
+
+    <div class="field">
+      <label for="purchase_cost">Purchase cost</label>
+      <input id="purchase_cost" name="purchase_cost" type="number" step="0.01" value="{{ asset.purchase_cost if asset else '' }}" placeholder="0.00">
+    </div>
+
+    <div class="field">
+      <label for="vendor">Vendor</label>
+      <input id="vendor" name="vendor" type="text" value="{{ asset.vendor if asset else '' }}" placeholder="e.g. CDW">
+    </div>
+
+    <div class="field">
+      <label for="warranty_expiry">Warranty expiry</label>
+      <input id="warranty_expiry" name="warranty_expiry" type="date" value="{{ asset.warranty_expiry if asset else '' }}">
+    </div>
+
+    <div class="field full">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" placeholder="Any additional detail worth recording…">{{ asset.notes if asset else '' }}</textarea>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px; margin-top:8px;">
+    <button type="submit" class="btn btn-accent">{{ icon('check-circle', 16) }}{{ 'Save changes' if asset else 'Register asset' }}</button>
+    <a href="{{ url_for('asset_detail', asset_id=asset.id) if asset else url_for('asset_list') }}" class="btn btn-ghost">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %} {% block title %}User Settings · Assetra{% endblock %} {% block content %} {% from "_icons.html" import icon %}
+
+<div class="panel-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+    <div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--ink); margin: 0;">My Account Settings</h1>
+        <p style="font-size: 13px; color: var(--steel); margin: 4px 0 0 0;">Manage your personal profile information and security credentials.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+    <!-- Profile Info Card -->
+    <div class="card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px;">
+        <h2 style="font-size: 16px; font-weight: 600; color: var(--ink); margin-top: 0; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            {{ icon('user', 18) }} Profile Details
+        </h2>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+                <label style="display: block; font-size: 11px; font-weight: 600; color: var(--steel); text-transform: uppercase; margin-bottom: 6px;">Username</label>
+                <input type="text" value="{{ me.username }}" disabled style="width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--ink); font-size: 14px; opacity: 0.8; cursor: not-allowed;">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 11px; font-weight: 600; color: var(--steel); text-transform: uppercase; margin-bottom: 6px;">Assigned Role</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge" style="padding: 4px 10px; background: var(--surface-subtle); color: var(--ink); font-weight: 600; border-radius: 4px; font-size: 12px; text-transform: uppercase;">{{ me.role }}</span>
+                    <span style="font-size: 12px; color: var(--steel);">Permissions are governed by your administrative level.</span>
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 11px; font-weight: 600; color: var(--steel); text-transform: uppercase; margin-bottom: 6px;">Account Status</label>
+                <div style="display: flex; align-items: center; gap: 6px; color: var(--success, #16a34a); font-weight: 500; font-size: 13px;">
+                    <span style="width: 8px; height: 8px; background: currentColor; border-radius: 50%; display: inline-block;"></span> Active & Connected
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security & Password Change Card -->
+    <div class="card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px;">
+        <h2 style="font-size: 16px; font-weight: 600; color: var(--ink); margin-top: 0; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            {{ icon('shield', 18) }} Security & Password
+        </h2>
+
+        <form method="POST" action="{{ url_for('user_settings') }}" style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+                <label style="display: block; font-size: 11px; font-weight: 600; color: var(--steel); text-transform: uppercase; margin-bottom: 6px;" for="current_password">Current Password</label>
+                <input type="password" id="current_password" name="current_password" required placeholder="Enter current password" style="width: 100%; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--ink); font-size: 14px;">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 11px; font-weight: 600; color: var(--steel); text-transform: uppercase; margin-bottom: 6px;" for="new_password">New Password</label>
+                <input type="password" id="new_password" name="new_password" required placeholder="Enter new password" style="width: 100%; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--ink); font-size: 14px;">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 11px; font-weight: 600; color: var(--steel); text-transform: uppercase; margin-bottom: 6px;" for="confirm_password">Confirm New Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirm new password" style="width: 100%; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--ink); font-size: 14px;">
+            </div>
+
+            <div style="padding-top: 8px;">
+                <button type="submit" class="btn btn-primary" style="padding: 10px 16px; font-weight: 600; width: 100%; justify-content: center;">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,38 +1,126 @@
-{% extends "base.html" %}
-{% block title %}Print label · {{ asset.asset_tag }}{% endblock %}
-{% block content %}
-{% from "_icons.html" import icon %}
+{% extends "base.html" %} {% block title %}Print label · {{ asset.asset_tag }}{% endblock %} {% block content %} {% from "_icons.html" import icon %} {% set is_admin_or_higher = me and me.role in ['superadmin', 'admin'] %} {% set is_staff = me is not
+none %}
+
 <div class="page-head">
-  <div>
-    <div class="eyebrow">Printable label</div>
-    <h1>{{ asset.asset_tag }}</h1>
-  </div>
-  <a href="{{ url_for('asset_detail', asset_id=asset.id) }}" class="btn btn-ghost">Back to asset</a>
+    <div>
+        <div class="eyebrow">Printable label</div>
+        <h1>{{ asset.asset_tag }}</h1>
+    </div>
+    <a href="{{ url_for('asset_detail', asset_id=asset.id) }}" class="btn btn-ghost">Back to asset</a>
 </div>
 
 <div class="label-sheet">
-  <div class="label-card label-card-tape">
-    <div class="lc-qr" id="qrbox"></div>
-    <div class="lc-tag lc-tag-big">{{ asset.asset_tag }}</div>
-  </div>
+    <div class="label-card label-card-tape">
+        <div class="lc-qr" id="qrbox"></div>
+        <div class="lc-tag lc-tag-big">{{ asset.asset_tag }}</div>
+    </div>
 
-  <div class="label-actions">
-    <button class="btn btn-accent" onclick="window.print()">{{ icon('printer', 16) }}Print</button>
-    <button class="btn btn-ghost" onclick="downloadQR('{{ asset.asset_tag }}-qr.png')">{{ icon('download', 16) }}Download QR</button>
-  </div>
-  <p style="text-align:center; color:var(--steel); font-size:12.5px; margin-top:10px;">
-    Tip: in the print dialog, set paper size to match your label tape and margins to "None" for the best fit.
-  </p>
+    <div class="label-actions" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <!-- Browser Print: Available to all staff (Users, Admins, Superadmins) -->
+        <button class="btn btn-accent {% if not is_staff %}btn-disabled{% endif %}" {% if not is_staff %}disabled title="Sign in as staff to print labels" {% endif %} onclick="window.print()">
+            {{ icon('printer', 16) }}Print
+        </button>
+
+        <!-- TSPL Thermal Print: Restricted to Admins and Superadmins -->
+        <button class="btn btn-ghost {% if not is_admin_or_higher %}btn-disabled{% endif %}" id="tspl-print-btn" {% if not is_admin_or_higher %}disabled title="Restricted to Admins and Superadmins" {% endif %} onclick="printLabel()">
+            {{ icon('printer', 16) }}<span id="tspl-print-text">Print QR</span>
+        </button>
+
+        <!-- Download QR: Available to all staff -->
+        <button class="btn btn-ghost {% if not is_staff %}btn-disabled{% endif %}" {% if not is_staff %}disabled title="Sign in as staff to download QR codes" {% endif %} onclick="downloadQR('{{ asset.asset_tag }}-qr.png')">
+            {{ icon('download', 16) }}Download QR
+        </button>
+    </div>
+
+    {% if not is_staff %}
+    <div style="text-align:center; margin-top: 14px; padding: 10px; background: var(--surface-subtle, #f8f9fa); border-radius: 8px; border: 1px dashed var(--border, #e5e7eb);">
+        <p style="color:var(--steel); font-size:13px; margin: 0 0 6px 0;">
+            You are viewing this item as a public visitor. QR scanning and location details are public.
+        </p>
+        <a href="{{ url_for('login') }}" style="font-size: 13px; color: var(--brand, #2563eb); font-weight: 600; text-decoration: none;">
+            Sign in as staff or administrator &rarr;
+        </a>
+    </div>
+    {% elif not is_admin_or_higher %}
+    <div style="text-align:center; margin-top: 12px;">
+        <p style="color:var(--steel); font-size:12px; margin: 0;">
+            Note: Thermal TSPL printing requires Admin or Superadmin privileges.
+        </p>
+    </div>
+    {% endif %}
+
+    <p style="text-align:center; color:var(--steel); font-size:12.5px; margin-top:16px;">
+        Tip: in the print dialog, set paper size to match your label tape and margins to "None" for the best fit.
+    </p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-  new QRCode(document.getElementById("qrbox"), {
-    text: "{{ scan_url }}",
-    width: 200,
-    height: 200,
-    colorDark: "#1c2230",
-    colorLight: "#ffffff",
-  });
+    new QRCode(document.getElementById("qrbox"), {
+        text: "{{ scan_url }}",
+        width: 200,
+        height: 200,
+        colorDark: "#1c2230",
+        colorLight: "#ffffff",
+    });
+
+    // Dynamic Print Helper Host Resolution
+    const isRemoteHost = !['localhost', '127.0.0.1'].includes(window.location.hostname) && !window.location.hostname.startsWith('192.168.');
+    const PRINT_HELPER_HOST = isRemoteHost ? 'localhost' : window.location.hostname;
+    const PRINT_HELPER_URL = `https://${PRINT_HELPER_HOST}:5050`;
+
+    async function printLabel() {
+        const btn = document.getElementById('tspl-print-btn');
+        if (btn.disabled) return;
+
+        const label = document.getElementById('tspl-print-text');
+        const original = label.textContent;
+
+        btn.disabled = true;
+        label.textContent = "Printing…";
+
+        try {
+            const res = await fetch(PRINT_HELPER_URL + "/print", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    label_text: "{{ asset.asset_tag }}",
+                    qr_data: "{{ scan_url }}",
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) throw new Error(data.error || "Print failed");
+
+            label.textContent = "Printed!";
+        } catch (err) {
+            console.error(err);
+            label.textContent = "Print failed";
+            alert(
+                "Couldn't reach the print helper.\n\n" + err.message +
+                "\n\nMake sure print_helper.py is running, you're on the office " +
+                "Wi-Fi, and you've visited " + PRINT_HELPER_URL + "/health once " +
+                "to accept the certificate."
+            );
+        } finally {
+            setTimeout(() => {
+                label.textContent = original;
+                btn.disabled = false;
+            }, 1800);
+        }
+    }
 </script>
+
+<style>
+    /* Styling for greyed-out disabled action buttons */
+    
+    .btn-disabled,
+    button[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed !important;
+        pointer-events: none;
+        filter: grayscale(80%);
+    }
+</style>
 {% endblock %}

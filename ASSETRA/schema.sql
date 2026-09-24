@@ -2,6 +2,15 @@
 
 PRAGMA foreign_keys = ON;
 
+CREATE TABLE IF NOT EXISTS accounts (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    username        TEXT NOT NULL UNIQUE,
+    role            TEXT NOT NULL DEFAULT 'user',  -- superadmin | admin | user
+    password_hash   TEXT NOT NULL,
+    is_active       INTEGER NOT NULL DEFAULT 1,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS locations (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
     name    TEXT NOT NULL UNIQUE
@@ -62,3 +71,4 @@ CREATE INDEX IF NOT EXISTS idx_assets_status ON assets(status);
 CREATE INDEX IF NOT EXISTS idx_assets_category ON assets(category);
 CREATE INDEX IF NOT EXISTS idx_history_asset ON asset_history(asset_id);
 CREATE INDEX IF NOT EXISTS idx_maintenance_asset ON maintenance_records(asset_id);
+CREATE INDEX IF NOT EXISTS idx_accounts_username ON accounts(username);
